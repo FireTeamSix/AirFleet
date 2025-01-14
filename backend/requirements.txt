@@ -1,0 +1,15 @@
+# requirements.txt
+
+# Core Django
+Django==4.2
+
+# Django REST Framework
+djangorestframework==3.14.0
+
+# PostgreSQL driver
+psycopg2-binary==2.9.6
+
+django-cors-headers==3.14.0
+
+# (Optional) Gunicorn for production server
+# gunicorn==20.1.0

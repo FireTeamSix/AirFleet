@@ -1,0 +1,64 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:14-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airfleet -d airfleet_db -h localhost || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    container_name: airfleet_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - airfleet-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: airfleet_backend
+    command: >
+      sh -c "python manage.py migrate &&
+            python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - airfleet-net
+    environment:
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: airfleet_frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - airfleet-net
+
+networks:
+  airfleet-net:
+
+volumes:
+  db_data:
