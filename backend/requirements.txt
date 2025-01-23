@@ -9,7 +9,11 @@ djangorestframework==3.14.0
 # PostgreSQL driver
 psycopg2-binary==2.9.6
 
+# CORS handling
 django-cors-headers==3.14.0
+
+# Image handling
+Pillow==10.1.0
 
 # (Optional) Gunicorn for production server
 # gunicorn==20.1.0

@@ -31,39 +31,53 @@ export default function LoginPage() {
     }
 
     return (
-        <main className="flex min-h-screen items-center justify-center bg-black text-white">
-            <form
-                onSubmit={handleSubmit}
-                className="flex flex-col gap-4 bg-gray-900 p-6 rounded shadow-md"
+        <main className="relative min-h-screen flex flex-col px-4 bg-black">
+            <div 
+                className="absolute inset-0 z-0"
+                style={{
+                    backgroundImage: 'url("home_bg.jpg")',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                }}
             >
-                <h1 className="text-2xl font-bold">Login</h1>
-                {error && <p className="text-red-400">{error}</p>}
+                <div className="absolute inset-0 bg-black/50"></div>
+            </div>
 
-                <label htmlFor="username">Username</label>
-                <input
-                    className="p-2 text-black"
-                    type="text"
-                    name="username"
-                    id="username"
-                    required
-                />
-
-                <label htmlFor="password">Password</label>
-                <input
-                    className="p-2 text-black"
-                    type="password"
-                    name="password"
-                    id="password"
-                    required
-                />
-
-                <button
-                    type="submit"
-                    className="bg-white text-black py-2 px-4 rounded hover:bg-gray-300"
+            <div className="relative z-10 flex items-center justify-center min-h-screen">
+                <form
+                    onSubmit={handleSubmit}
+                    className="flex flex-col gap-4 bg-black/80 p-8 rounded-lg shadow-xl backdrop-blur-sm w-full max-w-md"
                 >
-                    Sign In
-                </button>
-            </form>
+                    <h1 className="text-3xl font-bold text-white mb-2">Login</h1>
+                    {error && <p className="text-red-400">{error}</p>}
+
+                    <label htmlFor="username" className="text-gray-200">Username</label>
+                    <input
+                        className="p-3 rounded bg-gray-800 text-white border border-gray-700 focus:border-white focus:outline-none"
+                        type="text"
+                        name="username"
+                        id="username"
+                        required
+                    />
+
+                    <label htmlFor="password" className="text-gray-200">Password</label>
+                    <input
+                        className="p-3 rounded bg-gray-800 text-white border border-gray-700 focus:border-white focus:outline-none"
+                        type="password"
+                        name="password"
+                        id="password"
+                        required
+                    />
+
+                    <button
+                        type="submit"
+                        className="bg-white text-black py-3 px-4 rounded-md font-medium
+                                 hover:bg-gray-100 transition-colors mt-4"
+                    >
+                        Sign In
+                    </button>
+                </form>
+            </div>
         </main>
     );
 }
