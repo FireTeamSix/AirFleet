@@ -17,8 +17,11 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from flights.views import FlightListView, FlightDetailView
+from users.views import RegisterView, LoginView
 
 urlpatterns = [
     path('api/flights/', FlightListView.as_view(), name='flights-list'),
     path('api/flights/<int:pk>/', FlightDetailView.as_view(), name='flight-detail'),
+    path('api/register/', RegisterView.as_view(), name='register'),
+    path('api/login/', LoginView.as_view(), name='login'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

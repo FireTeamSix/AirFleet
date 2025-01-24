@@ -2,7 +2,6 @@
 
 FROM python:3.9-slim
 
-# (Optional) Set environment variables to avoid writing .pyc and enable unbuffered logging
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 

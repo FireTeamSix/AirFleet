@@ -4,6 +4,8 @@ import { useSession, signIn } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { format, differenceInSeconds } from 'date-fns';
 import Image from 'next/image';
+import { fetchWithAuth } from '@/utils/api';
+import Navbar from '@/components/Navbar';
 
 interface Flight {
     id: number;
@@ -55,9 +57,15 @@ export default function FlightsPage() {
     }, [session]);
 
     const fetchFlights = async () => {
-        const res = await fetch("http://localhost:8000/api/flights/");
-        const data = await res.json();
-        setFlights(data);
+        try {
+            const response = await fetchWithAuth("http://127.0.0.1:8000/api/flights/");
+            if (response.ok) {
+                const data = await response.json();
+                setFlights(data);
+            }
+        } catch (error) {
+            console.error('Error fetching flights:', error);
+        }
     };
 
     const handleEdit = (flight: Flight) => {
@@ -99,37 +107,34 @@ export default function FlightsPage() {
             formDataObj.append('photo', selectedPhoto);
         }
 
-        const url = editingFlight 
-            ? `http://localhost:8000/api/flights/${editingFlight.id}/`
-            : "http://localhost:8000/api/flights/";
+        try {
+            const url = editingFlight 
+                ? `http://127.0.0.1:8000/api/flights/${editingFlight.id}/`
+                : "http://127.0.0.1:8000/api/flights/";
 
-        const response = await fetch(url, {
-            method: editingFlight ? "PUT" : "POST",
-            body: formDataObj,
-        });
+            const response = await fetchWithAuth(url, editingFlight ? 'PUT' : 'POST', formDataObj);
 
-        if (response.ok) {
-            setIsAddingFlight(false);
-            setEditingFlight(null);
-            fetchFlights();
-            setFormData({
-                departure_airport: '',
-                arrival_airport: '',
-                departure_time: '',
-                arrival_time: '',
-                departure_gate: '',
-                arrival_gate: '',
-                flight_plan: '',
-                notes: '',
-                total_time: '',
-                aircraft_condition: 'AIRWORTHY',
-                registration_number: '',
-            });
-            setSelectedPhoto(null);
-        } else {
-            const errorData = await response.json();
-            console.error('Error submitting flight:', errorData);
-            alert('Error submitting flight. Please check the console for details.');
+            if (response.ok) {
+                setIsAddingFlight(false);
+                setEditingFlight(null);
+                fetchFlights();
+                setFormData({
+                    departure_airport: '',
+                    arrival_airport: '',
+                    departure_time: '',
+                    arrival_time: '',
+                    departure_gate: '',
+                    arrival_gate: '',
+                    flight_plan: '',
+                    notes: '',
+                    total_time: '',
+                    aircraft_condition: 'AIRWORTHY',
+                    registration_number: '',
+                });
+                setSelectedPhoto(null);
+            }
+        } catch (error) {
+            console.error('Error submitting flight:', error);
         }
     };
 
@@ -146,211 +151,214 @@ export default function FlightsPage() {
     }
 
     return (
-        <div className="p-8">
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold">Flight Logbook</h1>
-                <button
-                    onClick={() => setIsAddingFlight(true)}
-                    className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
-                >
-                    Add Flight
-                </button>
-            </div>
-
-            {isAddingFlight && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-                    <div className="bg-gray-100 rounded-lg p-8 max-w-2xl w-full">
-                        <h2 className="text-2xl font-bold mb-4 text-gray-900">
-                            {editingFlight ? 'Edit Flight' : 'Add New Flight'}
-                        </h2>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1 text-gray-900">Departure Airport</label>
-                                    <input
-                                        type="text"
-                                        value={formData.departure_airport}
-                                        onChange={(e) => setFormData({...formData, departure_airport: e.target.value})}
-                                        className="w-full p-2 border rounded bg-white text-gray-900"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1 text-gray-900">Arrival Airport</label>
-                                    <input
-                                        type="text"
-                                        value={formData.arrival_airport}
-                                        onChange={(e) => setFormData({...formData, arrival_airport: e.target.value})}
-                                        className="w-full p-2 border rounded bg-white text-gray-900"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1 text-gray-900">Departure Time</label>
-                                    <input
-                                        type="datetime-local"
-                                        value={formData.departure_time}
-                                        onChange={(e) => setFormData({...formData, departure_time: e.target.value})}
-                                        className="w-full p-2 border rounded bg-white text-gray-900"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1 text-gray-900">Arrival Time</label>
-                                    <input
-                                        type="datetime-local"
-                                        value={formData.arrival_time}
-                                        onChange={(e) => setFormData({...formData, arrival_time: e.target.value})}
-                                        className="w-full p-2 border rounded bg-white text-gray-900"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1 text-gray-900">Departure Gate</label>
-                                    <input
-                                        type="text"
-                                        value={formData.departure_gate}
-                                        onChange={(e) => setFormData({...formData, departure_gate: e.target.value})}
-                                        className="w-full p-2 border rounded bg-white text-gray-900"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1 text-gray-900">Arrival Gate</label>
-                                    <input
-                                        type="text"
-                                        value={formData.arrival_gate}
-                                        onChange={(e) => setFormData({...formData, arrival_gate: e.target.value})}
-                                        className="w-full p-2 border rounded bg-white text-gray-900"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1 text-gray-900">Registration Number</label>
-                                    <input
-                                        type="text"
-                                        value={formData.registration_number}
-                                        onChange={(e) => setFormData({...formData, registration_number: e.target.value})}
-                                        className="w-full p-2 border rounded bg-white text-gray-900"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1 text-gray-900">Aircraft Condition</label>
-                                    <select
-                                        value={formData.aircraft_condition}
-                                        onChange={(e) => setFormData({...formData, aircraft_condition: e.target.value})}
-                                        className="w-full p-2 border rounded bg-white text-gray-900"
-                                        required
-                                    >
-                                        {CONDITIONS.map(condition => (
-                                            <option key={condition.value} value={condition.value}>
-                                                {condition.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1 text-gray-900">Flight Plan</label>
-                                <textarea
-                                    value={formData.flight_plan}
-                                    onChange={(e) => setFormData({...formData, flight_plan: e.target.value})}
-                                    className="w-full p-2 border rounded bg-white text-gray-900"
-                                    rows={3}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1 text-gray-900">Notes</label>
-                                <textarea
-                                    value={formData.notes}
-                                    onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                                    className="w-full p-2 border rounded bg-white text-gray-900"
-                                    rows={3}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1 text-gray-900">Flight Photo</label>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => setSelectedPhoto(e.target.files?.[0] || null)}
-                                    className="w-full p-2 border rounded bg-white text-gray-900"
-                                />
-                            </div>
-                            <div className="flex justify-end space-x-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsAddingFlight(false)}
-                                    className="px-4 py-2 text-gray-900 hover:text-black transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors"
-                                >
-                                    Save Flight
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+        <div>
+            <Navbar />
+            <div className="p-8">
+                <div className="flex justify-between items-center mb-8">
+                    <h1 className="text-3xl font-bold">Flight Logbook</h1>
+                    <button
+                        onClick={() => setIsAddingFlight(true)}
+                        className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
+                    >
+                        Add Flight
+                    </button>
                 </div>
-            )}
 
-            <div className="bg-gray-100 rounded-lg shadow overflow-hidden">
-                <table className="min-w-full">
-                    <thead className="bg-gray-200">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Route</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Time</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Duration</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Registration</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Condition</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Photo</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                        {flights.map((flight) => (
-                            <tr key={flight.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 text-gray-900">
-                                    {flight.departure_airport} → {flight.arrival_airport}
-                                </td>
-                                <td className="px-6 py-4 text-gray-900">
-                                    {format(new Date(flight.departure_time), 'MMM d, HH:mm')} →{' '}
-                                    {format(new Date(flight.arrival_time), 'MMM d, HH:mm')}
-                                </td>
-                                <td className="px-6 py-4 text-gray-900">
-                                    {formatDuration(flight.total_time)}
-                                </td>
-                                <td className="px-6 py-4 text-gray-900">
-                                    {flight.registration_number}
-                                </td>
-                                <td className="px-6 py-4 text-gray-900">
-                                    {CONDITIONS.find(c => c.value === flight.aircraft_condition)?.label}
-                                </td>
-                                <td className="px-6 py-4 text-gray-900">
-                                    {flight.photo && (
-                                        <Image
-                                            src={`http://127.0.0.1:8000${flight.photo}`}
-                                            alt="Flight photo"
-                                            width={50}
-                                            height={50}
-                                            className="rounded"
+                {isAddingFlight && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                        <div className="bg-gray-100 rounded-lg p-8 max-w-2xl w-full">
+                            <h2 className="text-2xl font-bold mb-4 text-gray-900">
+                                {editingFlight ? 'Edit Flight' : 'Add New Flight'}
+                            </h2>
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1 text-gray-900">Departure Airport</label>
+                                        <input
+                                            type="text"
+                                            value={formData.departure_airport}
+                                            onChange={(e) => setFormData({...formData, departure_airport: e.target.value})}
+                                            className="w-full p-2 border rounded bg-white text-gray-900"
+                                            required
                                         />
-                                    )}
-                                </td>
-                                <td className="px-6 py-4">
-                                    <button 
-                                        onClick={() => handleEdit(flight)}
-                                        className="text-black hover:text-gray-700 transition-colors"
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1 text-gray-900">Arrival Airport</label>
+                                        <input
+                                            type="text"
+                                            value={formData.arrival_airport}
+                                            onChange={(e) => setFormData({...formData, arrival_airport: e.target.value})}
+                                            className="w-full p-2 border rounded bg-white text-gray-900"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1 text-gray-900">Departure Time</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={formData.departure_time}
+                                            onChange={(e) => setFormData({...formData, departure_time: e.target.value})}
+                                            className="w-full p-2 border rounded bg-white text-gray-900"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1 text-gray-900">Arrival Time</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={formData.arrival_time}
+                                            onChange={(e) => setFormData({...formData, arrival_time: e.target.value})}
+                                            className="w-full p-2 border rounded bg-white text-gray-900"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1 text-gray-900">Departure Gate</label>
+                                        <input
+                                            type="text"
+                                            value={formData.departure_gate}
+                                            onChange={(e) => setFormData({...formData, departure_gate: e.target.value})}
+                                            className="w-full p-2 border rounded bg-white text-gray-900"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1 text-gray-900">Arrival Gate</label>
+                                        <input
+                                            type="text"
+                                            value={formData.arrival_gate}
+                                            onChange={(e) => setFormData({...formData, arrival_gate: e.target.value})}
+                                            className="w-full p-2 border rounded bg-white text-gray-900"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1 text-gray-900">Registration Number</label>
+                                        <input
+                                            type="text"
+                                            value={formData.registration_number}
+                                            onChange={(e) => setFormData({...formData, registration_number: e.target.value})}
+                                            className="w-full p-2 border rounded bg-white text-gray-900"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1 text-gray-900">Aircraft Condition</label>
+                                        <select
+                                            value={formData.aircraft_condition}
+                                            onChange={(e) => setFormData({...formData, aircraft_condition: e.target.value})}
+                                            className="w-full p-2 border rounded bg-white text-gray-900"
+                                            required
+                                        >
+                                            {CONDITIONS.map(condition => (
+                                                <option key={condition.value} value={condition.value}>
+                                                    {condition.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 text-gray-900">Flight Plan</label>
+                                    <textarea
+                                        value={formData.flight_plan}
+                                        onChange={(e) => setFormData({...formData, flight_plan: e.target.value})}
+                                        className="w-full p-2 border rounded bg-white text-gray-900"
+                                        rows={3}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 text-gray-900">Notes</label>
+                                    <textarea
+                                        value={formData.notes}
+                                        onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                                        className="w-full p-2 border rounded bg-white text-gray-900"
+                                        rows={3}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 text-gray-900">Flight Photo</label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => setSelectedPhoto(e.target.files?.[0] || null)}
+                                        className="w-full p-2 border rounded bg-white text-gray-900"
+                                    />
+                                </div>
+                                <div className="flex justify-end space-x-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAddingFlight(false)}
+                                        className="px-4 py-2 text-gray-900 hover:text-black transition-colors"
                                     >
-                                        Edit
+                                        Cancel
                                     </button>
-                                </td>
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors"
+                                    >
+                                        Save Flight
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                <div className="bg-gray-100 rounded-lg shadow overflow-hidden">
+                    <table className="min-w-full">
+                        <thead className="bg-gray-200">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Route</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Time</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Duration</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Registration</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Condition</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Photo</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                            {flights.map((flight) => (
+                                <tr key={flight.id} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4 text-gray-900">
+                                        {flight.departure_airport} → {flight.arrival_airport}
+                                    </td>
+                                    <td className="px-6 py-4 text-gray-900">
+                                        {format(new Date(flight.departure_time), 'MMM d, HH:mm')} →{' '}
+                                        {format(new Date(flight.arrival_time), 'MMM d, HH:mm')}
+                                    </td>
+                                    <td className="px-6 py-4 text-gray-900">
+                                        {formatDuration(flight.total_time)}
+                                    </td>
+                                    <td className="px-6 py-4 text-gray-900">
+                                        {flight.registration_number}
+                                    </td>
+                                    <td className="px-6 py-4 text-gray-900">
+                                        {CONDITIONS.find(c => c.value === flight.aircraft_condition)?.label}
+                                    </td>
+                                    <td className="px-6 py-4 text-gray-900">
+                                        {flight.photo && (
+                                            <Image
+                                                src={`http://127.0.0.1:8000${flight.photo}`}
+                                                alt="Flight photo"
+                                                width={50}
+                                                height={50}
+                                                className="rounded"
+                                            />
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <button 
+                                            onClick={() => handleEdit(flight)}
+                                            className="text-black hover:text-gray-700 transition-colors"
+                                        >
+                                            Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

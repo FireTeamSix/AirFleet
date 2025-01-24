@@ -3,8 +3,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Flight
 from .serializers import FlightSerializer
+from rest_framework.permissions import IsAuthenticated
 
 class FlightListView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         flights = Flight.objects.all()
         serializer = FlightSerializer(flights, many=True)
@@ -18,6 +21,8 @@ class FlightListView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class FlightDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get_object(self, pk):
         try:
             return Flight.objects.get(pk=pk)

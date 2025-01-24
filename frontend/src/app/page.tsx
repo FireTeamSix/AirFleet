@@ -4,7 +4,7 @@ export default function HomePage() {
         <div 
           className="absolute inset-0 z-0"
           style={{
-            backgroundImage: 'url("home_bg.jpg")',
+            backgroundImage: 'url("/home_bg.jpg")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
