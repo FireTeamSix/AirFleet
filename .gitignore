@@ -172,3 +172,7 @@ cython_debug/
 
 .env
 .env.*
+
+# Ignore backend/media/flight_photos
+./backend/media/flight_photos/
+

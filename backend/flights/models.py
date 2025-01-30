@@ -1,7 +1,14 @@
 from django.db import models
 from django.core.validators import MinLengthValidator
+from django.conf import settings
 
 class Flight(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='flights'
+    )
+
     CONDITION_CHOICES = [
         ('GROUNDED', 'Grounded'),
         ('MAINTENANCE', 'Needs Maintenance'),
@@ -26,6 +33,10 @@ class Flight(models.Model):
         default='AIRWORTHY'
     )
     registration_number = models.CharField(max_length=10)
+    distance = models.IntegerField(
+        default=0,
+        help_text="Distance in nautical miles"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

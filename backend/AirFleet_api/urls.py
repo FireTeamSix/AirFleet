@@ -13,15 +13,17 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.urls import path
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from flights.views import FlightListView, FlightDetailView
 from users.views import RegisterView, LoginView
+from django.contrib import admin
+from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
-    path('api/flights/', FlightListView.as_view(), name='flights-list'),
-    path('api/flights/<int:pk>/', FlightDetailView.as_view(), name='flight-detail'),
-    path('api/register/', RegisterView.as_view(), name='register'),
-    path('api/login/', LoginView.as_view(), name='login'),
+    path('admin/', admin.site.urls),
+    path('api/', include('users.urls')),
+    path('api/', include('flights.urls')),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

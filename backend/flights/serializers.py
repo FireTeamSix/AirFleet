@@ -6,6 +6,7 @@ class FlightSerializer(serializers.ModelSerializer):
     class Meta:
         model = Flight
         fields = '__all__'
+        read_only_fields = ('user',)  # Make user field read-only
     
     def validate(self, data):
         """
@@ -18,5 +19,8 @@ class FlightSerializer(serializers.ModelSerializer):
         
         if abs((duration - data['total_time']).total_seconds()) > 1:
             raise serializers.ValidationError("Total time does not match departure and arrival times")
+        
+        if data['distance'] < 0:
+            raise serializers.ValidationError("Distance cannot be negative")
         
         return data 

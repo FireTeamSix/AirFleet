@@ -30,7 +30,7 @@ export default function RegisterPage() {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.detail || 'Registration failed');
+                throw new Error(data.detail || 'Registration failed: Server Error');
             }
 
             // Store tokens
@@ -39,7 +39,7 @@ export default function RegisterPage() {
 
             router.push('/login');
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Registration failed');
+            setError(err instanceof Error ? err.message : 'Registration failed: This Username or Email is already in use');
         }
     };
 

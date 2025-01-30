@@ -26,6 +26,9 @@ export default function Navbar() {
                     <Link href="/flights" className="hover:text-gray-300">
                         Flights
                     </Link>
+                    <Link href="/rankings" className="hover:text-gray-300">
+                        Rankings
+                    </Link>
                     <button
                         onClick={handleLogout}
                         className="px-4 py-2 rounded hover:bg-gray-800 transition-colors"

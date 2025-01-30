@@ -1,64 +1,64 @@
+version: '3.8'
+
 services:
   db:
     image: postgres:14-alpine
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U airfleet -d airfleet_db -h localhost || exit 1"]
+      test: ["CMD-SHELL", "pg_isready -U airfleet_user -d airfleet_db -h localhost || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 5
-    container_name: airfleet_db
+    container_name: postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      - POSTGRES_DB=airfleet_db
+      - POSTGRES_USER=airfleet_user
+      - POSTGRES_PASSWORD=postgres
     ports:
       - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - airfleet-net
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    build: ./backend
     container_name: airfleet_backend
-    command: >
-      sh -c "python manage.py migrate &&
-            python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./backend:/app
     ports:
       - "8000:8000"
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     networks:
       - airfleet-net
     environment:
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-
+      - POSTGRES_DB=airfleet_db
+      - POSTGRES_USER=airfleet_user
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+    command: >
+      sh -c "python manage.py wait_for_db &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    env_file:
-      - .env
-    container_name: airfleet_frontend
+    build: ./frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
     ports:
       - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=http://localhost:3000
     depends_on:
       - backend
-    networks:
-      - airfleet-net
 
 networks:
   airfleet-net:
 
 volumes:
-  db_data:
+  postgres_data:
